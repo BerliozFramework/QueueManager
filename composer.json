@@ -2,7 +2,6 @@
   "name": "berlioz/queue-manager",
   "description": "Queue manager",
   "type": "library",
-  "minimum-stability": "beta",
   "license": "MIT",
   "homepage": "https://getberlioz.com",
   "authors": [
