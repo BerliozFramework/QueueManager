@@ -82,6 +82,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
                 ->whereNull('lock_time')
                 ->whereLessThan('attempts', $this->maxAttempts)
                 ->orderBy('job_id', Order::ORDER_ASC)
+                ->limit(1)
                 ->fetchOne();
 
             if (null === $jobRaw) {
