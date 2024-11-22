@@ -165,7 +165,7 @@ class Worker implements LoggerAwareInterface
 
         do {
             // Sleep between get new job
-            $nbJobsExecuted > 0 && sleep($options->sleep);
+            $nbJobsExecuted > 0 && usleep($options->sleep * 1000 * 1000);
 
             // Get a job to consume
             $job = $queue->consume();

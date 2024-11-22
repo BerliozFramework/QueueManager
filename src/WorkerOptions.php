@@ -23,7 +23,7 @@ readonly class WorkerOptions
         public int|float $timeLimit = INF,
         public ?string $killFilePath = null,
         public bool $stopNoJob = false,
-        public int $sleep = 0,
+        public int|float $sleep = 0,
     ) {
     }
 
