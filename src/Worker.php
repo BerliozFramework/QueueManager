@@ -165,7 +165,7 @@ class Worker implements LoggerAwareInterface
 
         do {
             // Sleep between get new job
-            $nbJobsExecuted > 0 && usleep($options->sleep * 1000 * 1000);
+            $nbJobsExecuted > 0 && usleep((int)($options->sleep * 1000 * 1000));
 
             // Get a job to consume
             $job = $queue->consume();
@@ -218,8 +218,6 @@ class Worker implements LoggerAwareInterface
         } while (null === ($exit = $this->continue($options, $startTime, $job, $nbJobsExecuted)));
 
         $this->logger?->info(sprintf('Exit(%d): %s', $exit->code(), $exit->reason()));
-
-        sleep(1);
 
         return $exit->code();
     }
