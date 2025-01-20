@@ -24,6 +24,7 @@ readonly class WorkerOptions
         public ?string $killFilePath = null,
         public bool $stopNoJob = false,
         public int|float $sleep = 0,
+        public int|float $sleepNoJob = 1,
     ) {
     }
 
@@ -43,6 +44,7 @@ readonly class WorkerOptions
         $logger?->debug(sprintf('Kill file path: %s', $this->killFilePath ?? '--'));
         $logger?->debug(sprintf('Stop on no jobs: %s', $this->stopNoJob ? 'yes' : 'no'));
         $logger?->debug(sprintf('Sleep between job consumption: %s', $this->unit($this->sleep, 'second(s)')));
+        $logger?->debug(sprintf('Sleep if no job: %s', $this->unit($this->sleepNoJob, 'second(s)')));
     }
 
     private function unit(int|float $value, ?string $unit = null): string

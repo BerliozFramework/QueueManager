@@ -169,12 +169,15 @@ class Worker implements LoggerAwareInterface
 
             // Get a job to consume
             $job = $queue->consume();
-            $nbJobsExecuted++;
 
             if (null === $job) {
                 $this->logger?->debug('No job to consume');
+                usleep((int)($options->sleepNoJob * 1000 * 1000));
                 continue;
             }
+
+            // Increment nb job to execute
+            $nbJobsExecuted++;
 
             $this->logger?->info(
                 sprintf(
