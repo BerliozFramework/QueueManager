@@ -69,6 +69,20 @@ class QueueManagerTest extends TestCase
         $this->queueManager->filter('NonExistentQueue');
     }
 
+    public function testStats()
+    {
+        $this->primaryQueueMock->method('size')->willReturn(5);
+        $this->secondaryQueueMock->method('size')->willReturn(10);
+
+        $this->assertEquals(
+            [
+                'PrimaryQueue' => 5,
+                'SecondaryQueue' => 10
+            ],
+            iterator_to_array($this->queueManager->stats())
+        );
+    }
+
     public function testGetName()
     {
         $this->assertSame('PrimaryQueue, SecondaryQueue', $this->queueManager->getName());

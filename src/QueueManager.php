@@ -21,9 +21,10 @@ use Berlioz\QueueManager\Job\JobForQueue;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Queue\PurgeableQueueInterface;
 use Berlioz\QueueManager\Queue\QueueInterface;
+use Countable;
 use Generator;
 
-readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, \Countable
+readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, Countable
 {
     private array $queues;
 
@@ -80,6 +81,19 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
         );
 
         return new self(...$queues);
+    }
+
+    /**
+     * Get stats.
+     *
+     * @return Generator<string, int>
+     * @throws QueueException
+     */
+    public function stats(): Generator
+    {
+        foreach ($this->getQueues() as $queue) {
+            yield $queue->getName() => $queue->size();
+        }
     }
 
     /**
