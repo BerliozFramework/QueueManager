@@ -69,7 +69,27 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
         }
 
         $queues = iterator_to_array($this->getQueues(), false);
-        $queues = array_filter($queues, fn(QueueInterface $q): bool => in_array($q->getName(), $queue));
+        $queues = array_filter(
+            $queues,
+            function (QueueInterface $q) use ($queue): bool {
+                foreach ($queue as $item) {
+                    if ($item == $q->getName()) {
+                        return true;
+                    }
+
+                    // No wildcard
+                    if (false === str_ends_with($item, '*')) {
+                        continue;
+                    }
+
+                    // Wildcard
+                    if (str_starts_with($q->getName(), substr($item, 0, -1))) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
 
         if (empty($queues)) {
             throw QueueManagerException::queueNotFound(...$queue);
