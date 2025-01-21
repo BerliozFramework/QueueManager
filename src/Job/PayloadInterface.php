@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Berlioz\QueueManager\Job;
 
+use Berlioz\QueueManager\Exception\PayloadException;
 use JsonSerializable;
 
 interface PayloadInterface extends JsonSerializable
@@ -34,4 +35,14 @@ interface PayloadInterface extends JsonSerializable
      * @return mixed
      */
     public function get(string $path, mixed $default = null): mixed;
+
+    /**
+     * Get value in payload or fail.
+     *
+     * @param string $path
+     *
+     * @return mixed
+     * @throws PayloadException If path does not exist in payload
+     */
+    public function getOrFail(string $path): mixed;
 }

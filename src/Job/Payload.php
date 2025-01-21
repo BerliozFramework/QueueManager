@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Berlioz\QueueManager\Job;
 
+use Berlioz\QueueManager\Exception\PayloadException;
+
 readonly class Payload implements PayloadInterface
 {
     public function __construct(private array $payload)
@@ -50,5 +52,24 @@ readonly class Payload implements PayloadInterface
     {
         $payload = $this->payload;
         return b_array_traverse_get($payload, $path, $default);
+    }
+
+    /**
+     * Get value in payload or fail.
+     *
+     * @param string $path
+     *
+     * @return mixed
+     * @throws PayloadException If path does not exist in payload
+     */
+    public function getOrFail(string $path): mixed
+    {
+        $payload = $this->payload;
+
+        if (false === b_array_traverse_exists($payload, $path)) {
+            throw new PayloadException(sprintf('The payload path "%s" does not exist.', $path));
+        }
+
+        return b_array_traverse_get($payload, $path);
     }
 }
