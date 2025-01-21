@@ -78,12 +78,13 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
                     }
 
                     // No wildcard
-                    if (false === str_ends_with($item, '*')) {
+                    if (false === str_contains($item, '*')) {
                         continue;
                     }
 
                     // Wildcard
-                    if (str_starts_with($q->getName(), substr($item, 0, -1))) {
+                    $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/';
+                    if (1 === preg_match($regex, $q->getName())) {
                         return true;
                     }
                 }

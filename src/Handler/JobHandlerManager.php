@@ -104,7 +104,8 @@ class JobHandlerManager implements JobHandlerInterface
             }
 
             // Wildcard
-            if (str_starts_with($jobName, substr($jobHandle, 0, -1))) {
+            $regex = '/^' . str_replace('\*', '.*', preg_quote($jobHandle, '/')) . '$/';
+            if (1 === preg_match($regex, $jobName)) {
                 return $handler;
             }
         }

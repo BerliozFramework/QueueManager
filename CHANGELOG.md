@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - New method `PayloadInterface::getOrFail(string $path): mixed`
-- Support of wildcard "*" at the end of job name in `JobHandlerManager`
-- Support of wildcard "*" at the end of queue name in `QueueManager::filter()` method
+- Support of wildcard "*" in job name, in `JobHandlerManager::addHandler()` method
+- Support of wildcard "*" in queue name, in `QueueManager::filter()` method
 
 ## [1.0.0-beta4] - 2025-01-20
 
