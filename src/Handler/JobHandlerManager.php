@@ -16,6 +16,7 @@ namespace Berlioz\QueueManager\Handler;
 
 use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\JobInterface;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 
 class JobHandlerManager implements JobHandlerInterface
@@ -58,11 +59,12 @@ class JobHandlerManager implements JobHandlerInterface
 
     /**
      * @inheritDoc
+     * @throws ContainerExceptionInterface
      */
     public function handle(JobInterface $job): void
     {
         // No handler for job
-        if (!array_key_exists($job->getName(), $this->handlers)) {
+        if (null === ($handlerClass = $this->findHandler($job->getName()))) {
             if ($this->defaultJobHandler) {
                 $this->defaultJobHandler->handle($job);
                 return;
@@ -72,12 +74,41 @@ class JobHandlerManager implements JobHandlerInterface
         }
 
         // Get handler from service container
-        $handler = $this->container->get($this->handlers[$job->getName()]);
+        $handler = $this->container->get($handlerClass);
 
         if (!$handler instanceof JobHandlerInterface) {
             throw QueueManagerException::invalidJobHandler($job->getName());
         }
 
         $handler->handle($job);
+    }
+
+    /**
+     * Find handler.
+     *
+     * @param $jobName
+     *
+     * @return class-string<JobHandlerInterface>|null
+     */
+    public function findHandler($jobName): ?string
+    {
+        foreach ($this->handlers as $jobHandle => $handler) {
+            // Exact job name
+            if ($jobHandle === $jobName) {
+                return $handler;
+            }
+
+            // No wildcard
+            if (false === str_ends_with($jobHandle, '*')) {
+                continue;
+            }
+
+            // Wildcard
+            if (str_starts_with($jobName, substr($jobHandle, 0, -1))) {
+                return $handler;
+            }
+        }
+
+        return null;
     }
 }

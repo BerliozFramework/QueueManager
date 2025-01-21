@@ -67,6 +67,26 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->handle($jobMock);
     }
 
+    public function testHandleUsesCorrectHandlerWithWildcard()
+    {
+        $jobMock = $this->createMock(JobInterface::class);
+        $handlerMock = $this->createMock(JobHandlerInterface::class);
+
+        $jobMock->method('getName')->willReturn('TestJob');
+        $this->containerMock
+            ->method('get')
+            ->with(JobHandlerInterface::class)
+            ->willReturn($handlerMock);
+
+        $handlerMock
+            ->expects($this->once())
+            ->method('handle')
+            ->with($jobMock);
+
+        $this->jobHandlerManager->addHandler('Test*', JobHandlerInterface::class);
+        $this->jobHandlerManager->handle($jobMock);
+    }
+
     public function testHandleThrowsExceptionIfNoHandlerAndNoDefault()
     {
         $jobMock = $this->createMock(JobInterface::class);

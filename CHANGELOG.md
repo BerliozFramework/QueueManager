@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - New method `PayloadInterface::getOrFail(string $path): mixed`
+- Support of wildcard "*" at the end of job name in `JobHandlerManager`
 
 ## [1.0.0-beta4] - 2025-01-20
 

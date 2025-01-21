@@ -93,6 +93,8 @@ class FooJobHandler implements JobHandlerInterface
 }
 ```
 
+TIP: `JobHandlerManager` accept a wildcard "*" at the end of job name.
+
 ### Worker
 
 The `Worker` class is the main part of the **Berlioz Queue Manager** and is responsible for processing jobs from a queue
