@@ -70,6 +70,16 @@ class QueueManagerTest extends TestCase
         $this->assertSame($this->secondaryQueueMock, $filteredQueues[0]);
     }
 
+    public function testFilterReturnsFilteredQueueManagerOrder()
+    {
+        $filteredQueueManager = $this->queueManager->filter('Secondary*', 'Primary*');
+
+        $filteredQueues = iterator_to_array($filteredQueueManager->getQueues(), false);
+        $this->assertCount(2, $filteredQueues);
+        $this->assertSame($this->secondaryQueueMock, $filteredQueues[0]);
+        $this->assertSame($this->primaryQueueMock, $filteredQueues[1]);
+    }
+
     public function testFilterThrowsExceptionIfQueueNotFound()
     {
         $this->expectException(QueueManagerException::class);

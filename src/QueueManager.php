@@ -68,40 +68,32 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
             return $this;
         }
 
-        $queues = iterator_to_array($this->getQueues(), false);
-        $queues = array_filter(
-            $queues,
-            function (QueueInterface $q) use ($queue): bool {
-                foreach ($queue as $item) {
-                    if ($item == $q->getName()) {
-                        return true;
-                    }
-
-                    // No wildcard
-                    if (false === str_contains($item, '*')) {
-                        continue;
-                    }
-
-                    // Wildcard
-                    $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/';
-                    if (1 === preg_match($regex, $q->getName())) {
-                        return true;
-                    }
+        $finalQueues = [];
+        foreach ($queue as $name) {
+            foreach ($this->getQueues() as $q) {
+                if ($name == $q->getName()) {
+                    $finalQueues[$q->getName()] = $q;
+                    continue;
                 }
 
-                return false;
-            });
+                // No wildcard
+                if (false === str_contains($name, '*')) {
+                    continue;
+                }
 
-        if (empty($queues)) {
+                // Wildcard
+                $regex = '/^' . str_replace('\*', '.*', preg_quote($name, '/')) . '$/';
+                if (1 === preg_match($regex, $q->getName())) {
+                    $finalQueues[$q->getName()] = $q;
+                }
+            }
+        }
+
+        if (empty($finalQueues)) {
             throw QueueManagerException::queueNotFound(...$queue);
         }
 
-        usort(
-            $queues,
-            fn($a, $b) => array_search($a->getName(), $queue) <=> array_search($b->getName(), $queue)
-        );
-
-        return new self(...$queues);
+        return new self(...array_values($finalQueues));
     }
 
     /**
