@@ -25,6 +25,7 @@ use DateTimeInterface;
 use Hector\Connection\Connection;
 use Hector\Query\Component\Order;
 use Hector\Query\QueryBuilder;
+use Hector\Query\Statement\Conditions;
 
 class_exists(QueryBuilder::class) || throw QueueManagerException::missingPackage('hectororm/query');
 
@@ -34,9 +35,15 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
         private Connection $connection,
         string $name = 'default',
         private string $tableName = 'queue_jobs',
+        private int $retryTime = 30,
         private int $maxAttempts = 5,
     ) {
         parent::__construct($name);
+    }
+
+    private function getRetryDateTimeLimit(): DateTimeInterface
+    {
+        return $this->now()->sub(new DateInterval('PT' . $this->retryTime . 'S'));
     }
 
     private function getQueryBuilder(): QueryBuilder
@@ -48,16 +55,26 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
         return $builder;
     }
 
+    private function addBuilderConditions(QueryBuilder $builder): QueryBuilder
+    {
+        $retryLimit = $this->getRetryDateTimeLimit();
+
+        return $builder
+            ->whereLessThanOrEqual('availability_time', $this->now()->format('Y-m-d H:i:s'))
+            ->whereLessThan('attempts', $this->maxAttempts)
+            ->where(function (Conditions $where) use ($retryLimit): void {
+                $where
+                    ->whereNull('lock_time')
+                    ->orWhere('lock_time', '<', $retryLimit->format('Y-m-d H:i:s'));
+            });
+    }
+
     /**
      * @inheritDoc
      */
     public function size(): int
     {
-        return $this->getQueryBuilder()
-            ->whereLessThanOrEqual('availability_time', $this->now()->format('Y-m-d H:i:s'))
-            ->whereNull('lock_time')
-            ->whereLessThan('attempts', $this->maxAttempts)
-            ->count();
+        return $this->addBuilderConditions($this->getQueryBuilder())->count();
     }
 
     /**
@@ -68,10 +85,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
         $attempts = 0;
 
         do {
-            $jobRaw = $this->getQueryBuilder()
-                ->whereLessThanOrEqual('availability_time', $this->now()->format('Y-m-d H:i:s'))
-                ->whereNull('lock_time')
-                ->whereLessThan('attempts', $this->maxAttempts)
+            $jobRaw = $this->addBuilderConditions($this->getQueryBuilder())
                 ->orderBy('job_id', Order::ORDER_ASC)
                 ->limit(1)
                 ->fetchOne();

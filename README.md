@@ -161,6 +161,7 @@ $queue = new DbQueue(
     connection: $dbConnection, // Database connection
     name: 'default',           // Queue name
     tableName: 'queue_jobs',   // Name of MySQL table
+    retryTime: 30,             // Time to wait after failed job
     maxAttempts: 5,            // Maximum attempts of a job
 );
 ```
@@ -204,7 +205,7 @@ CREATE
   TRIGGER `queue_jobs_AFTER_DELETE` AFTER DELETE ON `queue_jobs`
   FOR EACH ROW BEGIN
     INSERT INTO `queue_jobs_done` (`job_id`, `create_time`, `queue`, `availability_time`, `attempts`, `lock_time`, `payload`)
-    VALUES (OLD.`job_id`, OLD.`create_time`, OLD.`queue`, OLD.`availability_time`, OLD.`attempts`, OLD.`lock_time`, OLD.`payload`);
+    VALUES (OLD.`job_id`, OLD.`create_time`, OLD.`queue`, OLD.`availability_time`, OLD.`attempts`, IFNULL(OLD.`lock_time`, CURRENT_TIMESTAMP), OLD.`payload`);
   END;$$
 DELIMITER ;
 ```
@@ -258,5 +259,6 @@ $queue = new AwsSqsQueue(
     sqsClient: new SqsClient(...), // Database connection
     name: 'default',               // Queue name
     queueUrl: '...',               // AWS queue URL
+    retryTime: 30,                 // Time to wait after failed job
 );
 ```

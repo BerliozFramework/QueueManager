@@ -85,12 +85,6 @@ abstract readonly class AbstractQueue implements QueueInterface, ClockInterface
      */
     protected function getDelayInSeconds(DateTimeInterface $dateTime): int
     {
-        $diff = $this->now()->diff($dateTime);
-
-        return
-            $diff->days * (24 * 60 * 60) +
-            $diff->h * (60 * 60) +
-            $diff->i * (60) +
-            $diff->s;
+        return $dateTime->getTimestamp() - $this->now()->getTimestamp();
     }
 }

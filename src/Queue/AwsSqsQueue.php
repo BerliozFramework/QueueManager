@@ -30,6 +30,7 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
         private SqsClient $sqsClient,
         private string $queueUrl,
         string $name = 'default',
+        private int $retryTime = 30,
     ) {
         parent::__construct($name);
     }
@@ -88,6 +89,7 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
     {
         $result = $this->sqsClient->receiveMessage([
             'QueueUrl' => $this->queueUrl,
+            'VisibilityTimeout' => $this->retryTime,
             'AttributeNames' => ['ApproximateReceiveCount'],
         ])->toArray()['Messages'][0] ?? null;
 
@@ -117,7 +119,7 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
     public function pushRaw(mixed $payload, DateTimeInterface|DateInterval|int $delay = 0): string
     {
         $result = $this->sqsClient->sendMessage([
-            'DelaySeconds' => $delay,
+            'DelaySeconds' => $this->getDelayInSeconds($this->getAvailableDateTime($delay)),
             'MessageBody' => json_encode($payload),
             'QueueUrl' => $this->queueUrl,
         ]);

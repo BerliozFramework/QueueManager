@@ -75,6 +75,7 @@ class AwsSqsQueueTest extends TestCase
                 [
                     [
                         'QueueUrl' => 'https://sqs.us-east-1.amazonaws.com/123456789012/testQueue',
+                        'VisibilityTimeout' => 30,
                         'AttributeNames' => ['ApproximateReceiveCount'],
                     ]
                 ]
@@ -95,6 +96,7 @@ class AwsSqsQueueTest extends TestCase
                 [
                     [
                         'QueueUrl' => 'https://sqs.us-east-1.amazonaws.com/123456789012/testQueue',
+                        'VisibilityTimeout' => 30,
                         'AttributeNames' => ['ApproximateReceiveCount'],
                     ]
                 ]

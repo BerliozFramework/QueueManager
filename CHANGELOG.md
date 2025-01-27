@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.0.0-beta7] - 2025-01-27
 
+### Added
+
+- `$retryTime` property for `DbQueue` and `AwsSqsQueue`
+
 ### Changed
 
 - Methods `QueueInterface::push()` and `QueueInterface::pushRaw()`, accept `\DateTimeInterface` or `\DateInterval` for `$delay` parameter
