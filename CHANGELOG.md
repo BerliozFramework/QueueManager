@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Attempts value do not increased after consume
+- `SqsJob` job name
 
 ## [1.0.0-beta6] - 2025-01-23
 

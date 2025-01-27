@@ -20,11 +20,13 @@ class SqsJob extends Job
         protected array $awsResult,
         protected readonly AwsSqsQueue $queue,
     ) {
+        $payload = json_decode($this->awsResult['Body'], true);
+
         parent::__construct(
             id: $this->awsResult['MessageId'],
             name: $payload['jobName'] ?? null,
             attempts: (int)(($this->awsResult['Attributes'] ?? [])['ApproximateReceiveCount'] ?? 0),
-            payload: json_decode($this->awsResult['Body'], true),
+            payload: $payload,
         );
     }
 
