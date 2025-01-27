@@ -17,6 +17,8 @@ namespace Berlioz\QueueManager\Queue;
 use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use DateInterval;
+use DateTimeInterface;
 
 interface QueueInterface
 {
@@ -47,21 +49,27 @@ interface QueueInterface
      * Push a new job.
      *
      * @param JobDescriptorInterface $jobDescriptor
-     * @param int $delay
+     * @param DateTimeInterface|DateInterval|int $delay
      *
      * @return string
      * @throws QueueException
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0): string;
+    public function push(
+        JobDescriptorInterface $jobDescriptor,
+        DateTimeInterface|DateInterval|int $delay = 0,
+    ): string;
 
     /**
      * Push raw.
      *
      * @param mixed $payload
-     * @param int $delay
+     * @param DateTimeInterface|DateInterval|int $delay
      *
      * @return string
      * @throws QueueException
      */
-    public function pushRaw(mixed $payload, int $delay = 0): string;
+    public function pushRaw(
+        mixed $payload,
+        DateTimeInterface|DateInterval|int $delay = 0,
+    ): string;
 }

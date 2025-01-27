@@ -21,15 +21,14 @@ use Berlioz\QueueManager\Job\DbJob;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
 use DateInterval;
-use DateTimeImmutable;
+use DateTimeInterface;
 use Hector\Connection\Connection;
 use Hector\Query\Component\Order;
 use Hector\Query\QueryBuilder;
-use Psr\Clock\ClockInterface;
 
 class_exists(QueryBuilder::class) || throw QueueManagerException::missingPackage('hectororm/query');
 
-readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface, ClockInterface
+readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
 {
     public function __construct(
         private Connection $connection,
@@ -38,14 +37,6 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
         private int $maxAttempts = 5,
     ) {
         parent::__construct($name);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function now(): DateTimeImmutable
-    {
-        return new DateTimeImmutable();
     }
 
     private function getQueryBuilder(): QueryBuilder
@@ -78,7 +69,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
 
         do {
             $jobRaw = $this->getQueryBuilder()
-                ->whereLessThanOrEqual('availability_time', $this->now()->format("Y-m-d H:i:s"))
+                ->whereLessThanOrEqual('availability_time', $this->now()->format('Y-m-d H:i:s'))
                 ->whereNull('lock_time')
                 ->whereLessThan('attempts', $this->maxAttempts)
                 ->orderBy('job_id', Order::ORDER_ASC)
@@ -102,8 +93,8 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
                     )
                 )
                 ->update($updatedData = [
-                    'lock_time' => $this->now()->format("Y-m-d H:i:s"),
-                    'attempts' => ($jobRaw['attempts'] ?? 0) + (null !== $jobRaw['lock_time'] ? 1 : 0),
+                    'lock_time' => $this->now()->format('Y-m-d H:i:s'),
+                    'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
                 ]);
 
             if ($affected === 1) {
@@ -141,24 +132,19 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
     /**
      * @inheritDoc
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0): string
+    public function push(JobDescriptorInterface $jobDescriptor, DateTimeInterface|DateInterval|int $delay = 0): string
     {
-        $attempts = 0;
-        if ($jobDescriptor instanceof JobInterface) {
-            $attempts += $jobDescriptor->getAttempts() + 1;
-        }
-
         return $this->pushRaw(
             payload: $jobDescriptor,
             delay: $delay,
-            attempts: $attempts,
+            attempts: $jobDescriptor instanceof JobInterface ? $jobDescriptor->getAttempts() : 0,
         );
     }
 
     /**
      * @inheritDoc
      */
-    public function pushRaw(mixed $payload, int $delay = 0, int $attempts = 0): string
+    public function pushRaw(mixed $payload, DateTimeInterface|DateInterval|int $delay = 0, int $attempts = 0): string
     {
         $now = $this->now();
 
@@ -166,7 +152,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
             ->insert([
                 'create_time' => $now->format('Y-m-d H:i:s'),
                 'queue' => $this->name,
-                'availability_time' => $now->add(new DateInterval('PT' . $delay . 'S'))->format('Y-m-d H:i:s'),
+                'availability_time' => $this->getAvailableDateTime($delay)->format('Y-m-d H:i:s'),
                 'attempts' => $attempts,
                 'payload' => json_encode($payload),
             ]);
@@ -199,8 +185,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface,
         $this->getQueryBuilder()
             ->where('job_id', $job->getId())
             ->update([
-                'availability_time' => $this->now()->add(new DateInterval('PT' . $delay . 'S'))->format('Y-m-d H:i:s'),
-                'attempts' => $job->getAttempts() + 1,
+                'availability_time' => $this->getAvailableDateTime($delay)->format('Y-m-d H:i:s'),
                 'lock_time' => null,
             ]);
     }

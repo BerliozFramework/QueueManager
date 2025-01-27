@@ -49,12 +49,12 @@ abstract class JobTestCase extends TestCase
     {
         $job = $this->newJob();
 
-        $this->assertEquals(0, $job->getAttempts());
+        $this->assertEquals(1, $job->getAttempts());
 
         $job->release();
         $job = $job->getQueue()->consume();
 
-        $this->assertEquals(1, $job->getAttempts());
+        $this->assertEquals(2, $job->getAttempts());
     }
 
     public function testGetPayload()

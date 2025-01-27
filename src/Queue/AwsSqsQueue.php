@@ -19,6 +19,8 @@ use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\SqsJob;
+use DateInterval;
+use DateTimeInterface;
 
 class_exists(SqsClient::class) || throw QueueManagerException::missingPackage('aws/aws-sdk-php');
 
@@ -104,7 +106,7 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
     /**
      * @inheritDoc
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0): string
+    public function push(JobDescriptorInterface $jobDescriptor, DateTimeInterface|DateInterval|int $delay = 0): string
     {
         return $this->pushRaw($jobDescriptor, $delay);
     }
@@ -112,7 +114,7 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
     /**
      * @inheritDoc
      */
-    public function pushRaw(mixed $payload, int $delay = 0): string
+    public function pushRaw(mixed $payload, DateTimeInterface|DateInterval|int $delay = 0): string
     {
         $result = $this->sqsClient->sendMessage([
             'DelaySeconds' => $delay,

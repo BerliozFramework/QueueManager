@@ -17,6 +17,8 @@ namespace Berlioz\QueueManager\Queue;
 use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use DateInterval;
+use DateTimeInterface;
 
 readonly class NullQueue implements QueueInterface
 {
@@ -52,7 +54,7 @@ readonly class NullQueue implements QueueInterface
     /**
      * @inheritDoc
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0): string
+    public function push(JobDescriptorInterface $jobDescriptor, DateTimeInterface|DateInterval|int $delay = 0): string
     {
         throw new QueueException('No queue defined');
     }
@@ -60,7 +62,7 @@ readonly class NullQueue implements QueueInterface
     /**
      * @inheritDoc
      */
-    public function pushRaw(mixed $payload, int $delay = 0, int $attempts = 0): string
+    public function pushRaw(mixed $payload, DateTimeInterface|DateInterval|int $delay = 0, int $attempts = 0): string
     {
         throw new QueueException('No queue defined');
     }

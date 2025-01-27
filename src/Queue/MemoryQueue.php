@@ -22,9 +22,9 @@ use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Job\MemoryJob;
 use DateInterval;
 use DateTimeImmutable;
-use Psr\Clock\ClockInterface;
+use DateTimeInterface;
 
-readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterface, ClockInterface
+readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterface
 {
     private ArrayObject $stack;
 
@@ -35,14 +35,6 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
     ) {
         parent::__construct($name);
         $this->stack = new ArrayObject();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function now(): DateTimeImmutable
-    {
-        return new DateTimeImmutable();
     }
 
     public function nowDeltaRetry(): DateTimeImmutable
@@ -97,7 +89,14 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
                 continue;
             }
 
-            $this->stack->offsetSet($id, [...$value, 'lock_time' => $this->now()]);
+            $this->stack->offsetSet(
+                $id,
+                $value = [
+                    ...$value,
+                    'attempts' => $value['attempts'] + 1,
+                    'lock_time' => $this->now()
+                ]
+            );
 
             return $this->createJob(['id' => $id, ...$value]);
         }
@@ -130,24 +129,19 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
     /**
      * @inheritDoc
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0): string
+    public function push(JobDescriptorInterface $jobDescriptor, DateTimeInterface|DateInterval|int $delay = 0): string
     {
-        $attempts = 0;
-        if ($jobDescriptor instanceof JobInterface) {
-            $attempts += $jobDescriptor->getAttempts() + 1;
-        }
-
         return $this->pushRaw(
             payload: $jobDescriptor,
             delay: $delay,
-            attempts: $attempts,
+            attempts: $jobDescriptor instanceof JobInterface ? $jobDescriptor->getAttempts() : 0,
         );
     }
 
     /**
      * @inheritDoc
      */
-    public function pushRaw(mixed $payload, int $delay = 0, int $attempts = 0): string
+    public function pushRaw(mixed $payload, DateTimeInterface|DateInterval|int $delay = 0, int $attempts = 0): string
     {
         $this->stack->offsetSet(
             $id = uniqid(),
@@ -155,7 +149,7 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
                 'id' => $id,
                 'create_time' => $now = $this->now(),
                 'delay' => $delay,
-                'available_time' => $now->add(new DateInterval('PT' . $delay . 'S')),
+                'available_time' => $this->getAvailableDateTime($delay),
                 'lock_time' => null,
                 'attempts' => $attempts,
                 'payload' => json_encode($payload),
@@ -199,9 +193,8 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
             $job->getId(),
             [
                 ...$raw,
-                'available_time' => $this->now()->add(new DateInterval('PT' . $delay . 'S')),
+                'available_time' => $this->getAvailableDateTime($delay),
                 'lock_time' => null,
-                'attempts' => $raw['attempts'] + 1,
             ]
         );
     }

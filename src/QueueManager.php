@@ -22,6 +22,8 @@ use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Queue\PurgeableQueueInterface;
 use Berlioz\QueueManager\Queue\QueueInterface;
 use Countable;
+use DateInterval;
+use DateTimeInterface;
 use Generator;
 
 readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, Countable
@@ -156,8 +158,11 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
      * @inheritDoc
      * @param ?string $queue
      */
-    public function push(JobDescriptorInterface $jobDescriptor, int $delay = 0, ?string $queue = null): string
-    {
+    public function push(
+        JobDescriptorInterface $jobDescriptor,
+        DateInterval|DateTimeInterface|int $delay = 0,
+        ?string $queue = null,
+    ): string {
         if ($jobDescriptor instanceof JobForQueue) {
             $queue = $jobDescriptor->forQueue() ?: $queue;
         }
@@ -179,8 +184,11 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
      * @inheritDoc
      * @param ?string $queue
      */
-    public function pushRaw(mixed $payload, int $delay = 0, ?string $queue = null): string
-    {
+    public function pushRaw(
+        mixed $payload,
+        DateInterval|DateTimeInterface|int $delay = 0,
+        ?string $queue = null,
+    ): string {
         if (null === $queue) {
             return $this->queue->pushRaw($payload);
         }
