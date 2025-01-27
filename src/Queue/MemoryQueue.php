@@ -147,7 +147,7 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
             $id = uniqid(),
             [
                 'id' => $id,
-                'create_time' => $now = $this->now(),
+                'create_time' => $this->now(),
                 'delay' => $delay,
                 'available_time' => $this->getAvailableDateTime($delay),
                 'lock_time' => null,
