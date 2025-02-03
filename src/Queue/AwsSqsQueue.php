@@ -38,14 +38,6 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
     /**
      * @inheritDoc
      */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function size(): int
     {
         $response = $this->sqsClient->getQueueAttributes([

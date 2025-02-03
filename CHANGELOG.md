@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta8] - 2025-02-03
+
+### Added
+
+- New option `WorkerOptions::$backoffTime` (default: 0) to wait before retry failed job
+
 ## [1.0.0-beta7] - 2025-01-27
 
 ### Added
