@@ -205,7 +205,7 @@ class Worker implements LoggerAwareInterface
                 );
             } catch (Throwable $exception) {
                 // Release job
-                $job->release();
+                $job->release($options->backoffTime);
 
                 $this->logger?->error(
                     sprintf(
