@@ -3,7 +3,7 @@
 [![Latest Version](https://img.shields.io/packagist/v/berlioz/queue-manager.svg?style=flat-square)](https://github.com/BerliozFramework/QueueManager/releases)
 [![Software license](https://img.shields.io/github/license/BerliozFramework/QueueManager.svg?style=flat-square)](https://github.com/BerliozFramework/QueueManager/blob/1.x/LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/BerliozFramework/QueueManager/tests.yml?branch=main&style=flat-square)](https://github.com/BerliozFramework/QueueManager/actions/workflows/tests.yml?query=branch%3Amain)
-[![Quality Grade](https://img.shields.io/codacy/grade/701df41ea7644c3abe548e93f0412d87/main.svg?style=flat-square)](https://www.codacy.com/manual/BerliozFramework/QueueManager)
+[![Quality Grade](https://img.shields.io/codacy/grade/701df41ea7644c3abe548e93f0412d87/main.svg?style=flat-square)](https://app.codacy.com/gh/BerliozFramework/QueueManager)
 [![Total Downloads](https://img.shields.io/packagist/dt/berlioz/queue-manager.svg?style=flat-square)](https://packagist.org/packages/berlioz/queue-manager)
 
 **Berlioz Queue Manager** is responsible for processing jobs from a queue using a job handler. It supports advanced
@@ -123,8 +123,9 @@ $options = new WorkerOptions(
     memoryLimit: 128, // Memory limit in MB
     timeLimit: 60,    // Time limit in seconds
     killFilePath: 10, // File to kill process
+    sleep: 2,         // Sleep time between jobs in seconds
     stopNoJob: true,  // Stop if no job
-    sleep: 2          // Sleep time between jobs in seconds
+    backoffTime: 0,   // Time to wait before retry failed job
 );
 
 // Create a queue instance
