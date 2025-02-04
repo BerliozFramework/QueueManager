@@ -82,31 +82,37 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
      */
     public function consume(): ?DbJob
     {
-        $jobRaw = $this->addBuilderConditions($this->getQueryBuilder())
-            ->orderBy('job_id', Order::ORDER_ASC)
-            ->limit(1)
-            ->fetchOne(true);
+        try {
+            $this->connection->beginTransaction();
 
-        if (null === $jobRaw) {
-            return null;
-        }
+            $jobRaw = $this->addBuilderConditions($this->getQueryBuilder())
+                ->orderBy('job_id', Order::ORDER_ASC)
+                ->limit(1)
+                ->fetchOne(true);
 
-        // Lock
-        $affected = $this->getQueryBuilder()
-            ->whereEquals(
-                array_filter(
-                    $jobRaw,
-                    fn($k) => in_array(
-                        $k,
-                        ['job_id', 'queue', 'availability_time', 'attempts', 'lock_time']
-                    ),
-                    ARRAY_FILTER_USE_KEY
+            if (null === $jobRaw) {
+                return null;
+            }
+
+            // Lock
+            $affected = $this->getQueryBuilder()
+                ->whereEquals(
+                    array_filter(
+                        $jobRaw,
+                        fn($k) => in_array(
+                            $k,
+                            ['job_id', 'queue', 'availability_time', 'attempts', 'lock_time']
+                        ),
+                        ARRAY_FILTER_USE_KEY
+                    )
                 )
-            )
-            ->update($updatedData = [
-                'lock_time' => $this->now()->format('Y-m-d H:i:s'),
-                'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
-            ]);
+                ->update($updatedData = [
+                    'lock_time' => $this->now()->format('Y-m-d H:i:s'),
+                    'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
+                ]);
+        } finally {
+            $this->connection->commit();
+        }
 
         if ($affected === 1) {
             return $this->createJob(array_replace($jobRaw, $updatedData));
