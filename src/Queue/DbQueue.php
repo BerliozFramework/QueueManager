@@ -82,41 +82,35 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
      */
     public function consume(): ?DbJob
     {
-        $attempts = 0;
+        $jobRaw = $this->addBuilderConditions($this->getQueryBuilder())
+            ->orderBy('job_id', Order::ORDER_ASC)
+            ->limit(1)
+            ->fetchOne(true);
 
-        do {
-            $jobRaw = $this->addBuilderConditions($this->getQueryBuilder())
-                ->orderBy('job_id', Order::ORDER_ASC)
-                ->limit(1)
-                ->fetchOne();
+        if (null === $jobRaw) {
+            return null;
+        }
 
-            if (null === $jobRaw) {
-                return null;
-            }
-
-            // Lock
-            $affected = $this->getQueryBuilder()
-                ->whereEquals(
-                    array_filter(
-                        $jobRaw,
-                        fn($k) => in_array(
-                            $k,
-                            ['job_id', 'queue', 'availability_time', 'attempts', 'lock_time']
-                        ),
-                        ARRAY_FILTER_USE_KEY
-                    )
+        // Lock
+        $affected = $this->getQueryBuilder()
+            ->whereEquals(
+                array_filter(
+                    $jobRaw,
+                    fn($k) => in_array(
+                        $k,
+                        ['job_id', 'queue', 'availability_time', 'attempts', 'lock_time']
+                    ),
+                    ARRAY_FILTER_USE_KEY
                 )
-                ->update($updatedData = [
-                    'lock_time' => $this->now()->format('Y-m-d H:i:s'),
-                    'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
-                ]);
+            )
+            ->update($updatedData = [
+                'lock_time' => $this->now()->format('Y-m-d H:i:s'),
+                'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
+            ]);
 
-            if ($affected === 1) {
-                return $this->createJob(array_replace($jobRaw, $updatedData));
-            }
-
-            $attempts++;
-        } while ($attempts < 5);
+        if ($affected === 1) {
+            return $this->createJob(array_replace($jobRaw, $updatedData));
+        }
 
         return null;
     }
