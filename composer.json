@@ -29,6 +29,7 @@
     "psr/log": "^1.0 || ^2.0 || ^3.0"
   },
   "require-dev": {
+    "ext-redis": "*",
     "phpunit/phpunit": "^11.0",
     "phpstan/phpstan": "^1.10",
     "aws/aws-sdk-php": "^3.316",
@@ -36,6 +37,7 @@
   },
   "suggest": {
     "ext-pcntl": "Tu use signals to exit worker",
+    "ext-redis": "To use Redis queue",
     "aws/aws-sdk-php": "To use AWS SQS service",
     "hectororm/query": "To use database queue"
   },

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.0.0-beta9] - 2025-02-04
 
+### Added
+
+- New `RedisQueue` and `RedisJob`
+
 ### Changed
 
 - `DbQueue` use lock for update from `hectororm/query` package instead of try another job
