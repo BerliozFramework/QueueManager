@@ -26,6 +26,7 @@ use Hector\Connection\Connection;
 use Hector\Query\Component\Order;
 use Hector\Query\QueryBuilder;
 use Hector\Query\Statement\Conditions;
+use Throwable;
 
 class_exists(QueryBuilder::class) || throw QueueManagerException::missingPackage('hectororm/query');
 
@@ -82,6 +83,10 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
      */
     public function consume(): ?DbJob
     {
+        if (true === $this->connection->inTransaction()) {
+            throw new QueueException('A database transaction is already running');
+        }
+
         try {
             $this->connection->beginTransaction();
 
@@ -91,6 +96,7 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
                 ->fetchOne(true);
 
             if (null === $jobRaw) {
+                $this->connection->commit();
                 return null;
             }
 
@@ -110,8 +116,11 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
                     'lock_time' => $this->now()->format('Y-m-d H:i:s'),
                     'attempts' => ($jobRaw['attempts'] ?? 0) + 1,
                 ]);
-        } finally {
+
             $this->connection->commit();
+        } catch (Throwable $exception) {
+            $this->connection->rollBack();
+            throw $exception;
         }
 
         if ($affected === 1) {
