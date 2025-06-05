@@ -33,6 +33,11 @@ class RedisQueueTest extends QueueTestCase
         }
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        self::$redis->flushAll();
+    }
+
     protected function setUp(): void
     {
         self::$redis->flushAll();
