@@ -16,6 +16,7 @@ namespace Berlioz\QueueManager\Queue;
 
 use Berlioz\QueueManager\Exception\JobException;
 use Berlioz\QueueManager\Exception\QueueException;
+use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Job\RedisJob;
@@ -24,12 +25,13 @@ use DateTimeInterface;
 use Exception;
 use Redis;
 
+class_exists(Redis::class) || throw QueueManagerException::missingPackage('ext-redis');
+
 readonly class RedisQueue extends AbstractQueue implements QueueInterface
 {
     public function __construct(
         private Redis $redis,
         string $name = 'default',
-        private int $retryTime = 30,
     ) {
         parent::__construct($name);
     }
