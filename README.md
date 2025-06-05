@@ -30,7 +30,6 @@ $ composer require berlioz/queue-manager
     * **psr/clock**
     * **psr/container**
     * **psr/log**
-    * **psr/event-dispatcher**
 
 ## Usage
 
@@ -261,5 +260,83 @@ $queue = new AwsSqsQueue(
     name: 'default',               // Queue name
     queueUrl: '...',               // AWS queue URL
     retryTime: 30,                 // Time to wait after failed job
+);
+```
+
+#### RedisQueue
+
+The `RedisQueue` is a high-performance, in-memory implementation of a queue that uses Redis as its backend. By leveraging Redis’ fast data structures, `RedisQueue` enables quick enqueue and dequeue operations while providing optional durability through Redis persistence mechanisms. It is well-suited for environments requiring fast throughput and low latency.
+
+**Key Characteristics**:
+
+- **High Performance**: Uses Redis’ in-memory storage for rapid job management.
+- **Optional Durability**: Jobs can survive restarts if Redis persistence (AOF or RDB) is enabled.
+- **Scalable**: Easily supports distributed workers and large numbers of concurrent jobs.
+- **Atomic Operations**: Utilizes Redis commands to guarantee atomic push/pop of jobs.
+- **Use Cases**:
+  - Real-time applications requiring low-latency job handling.
+  - Scalable systems with multiple distributed consumers or producers.
+  - Environments where Redis is already in use as a cache or data store.
+
+The `RedisQueue` is ideal when you need both performance and a degree of durability, while maintaining a simple infrastructure. However, it is important to ensure your Redis instance is properly configured for persistence if job loss on crash is unacceptable.
+
+```php
+use Redis;
+use Berlioz\QueueManager\Queue\RedisQueue;
+
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+
+$queue = new RedisQueue(
+  redis: $redis,    // Redis connection
+  name: 'default',  // Queue name
+);
+```
+
+Tips:
+
+- For test isolation, use a dedicated Redis database and call `$redis->flushDb()` before/after your test suite.
+- For production, monitor memory usage and persistence settings to prevent data loss.
+
+#### AmqpQueue
+
+The AmqpQueue is an advanced queue implementation based on the AMQP protocol, typically used with brokers like RabbitMQ. It provides high throughput, supports delayed jobs, priorities, and dead-lettering, and is suitable for distributed applications requiring reliable and scalable message processing.
+
+**Key Characteristics**:
+
+- **AMQP/RabbitMQ Integration**: Leverages a message broker (such as RabbitMQ) to provide asynchronous job distribution between producers and consumers.
+- **Delayed Jobs (without plugin)**: Uses per-delay queues with a Time-To-Live (TTL) and dead-letter exchange (DLX) to defer the execution of jobs without needing the `x-delayed-message` plugin.
+- **Prioritization**: Supports message priorities, allowing urgent jobs to be processed before lower-priority ones.
+- **Dead-Letter Queue**: Automatically routes messages that are expired, rejected, or exceed the maximum number of attempts to a dedicated dead-letter queue for later inspection or reprocessing.
+- **Scalability**: Decouples job producers and consumers, allowing horizontal scaling of workers.
+- **Auto-Cleanup**: Delayed queues can be auto-deleted when empty to avoid polluting the broker with unused queues.
+- **Use Cases**:
+  - Distributed or microservice architectures needing asynchronous background processing.
+  - Workflows where job retries, delays, and prioritization are important.
+  - Applications requiring monitoring and recovery of failed jobs.
+
+How it works:
+
+- **Push with Delay**: When a job is pushed with a delay, it is routed to a temporary queue with a TTL and DLX. Once the TTL expires, the broker moves the job into the main queue for processing.
+- **Retries**: When a job fails, it can be retried with a delay and with a lower priority.
+- **Dead-Letter**: If the number of attempts exceeds `maxAttempts`, the job is sent to the dead-letter queue for inspection.
+
+```php
+use Berlioz\QueueManager\Queue\AmqpQueue;
+use AMQPConnection;
+
+$connection = new AMQPConnection([
+  'host'     => 'localhost',
+  'port'     => 5672,
+  'login'    => 'guest',
+  'password' => 'guest',
+  'vhost'    => '/',
+]);
+$connection->connect();
+
+$queue = new AmqpQueue(
+  connection: $connection, // AMQP connection
+  name: 'default',         // Queue name
+  maxAttempts: 5,          // Maximum retry attempts
 );
 ```
