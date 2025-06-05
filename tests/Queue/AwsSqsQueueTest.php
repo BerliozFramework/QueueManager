@@ -120,7 +120,7 @@ class AwsSqsQueueTest extends TestCase
         $this->queue->consume();
     }
 
-    public function testPushReturnsMessageId()
+    public function testPushReturnsJobId()
     {
         $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
 
@@ -138,8 +138,8 @@ class AwsSqsQueueTest extends TestCase
             )
             ->willReturn(new Result(['MessageId' => 'msg123']));
 
-        $messageId = $this->queue->push($jobDescriptorMock, 10);
-        $this->assertSame('msg123', $messageId);
+        $jobId = $this->queue->push($jobDescriptorMock, 10);
+        $this->assertSame('msg123', $jobId);
     }
 
     public function testPurge()

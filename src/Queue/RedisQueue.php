@@ -39,6 +39,8 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
      */
     public function size(): int
     {
+        $this->freeDelayedJobs();
+
         return $this->redis->llen($this->name) ?: 0;
     }
 
@@ -114,7 +116,7 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
         return new RedisJob(
             id: (string)$raw['jobId'],
             name: $name,
-            attempts: $raw['attempts'] ?? 0,
+            attempts: ($raw['attempts'] ?? 0) + 1,
             payload: $payload,
             queue: $this,
         );
@@ -174,7 +176,7 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
         $job->isReleased() && throw JobException::alreadyReleased($job);
         $job->isDeleted() && throw JobException::alreadyDeleted($job);
 
-        $this->pushRaw($job, $delay);
+        $this->push($job, $delay);
     }
 
     /**

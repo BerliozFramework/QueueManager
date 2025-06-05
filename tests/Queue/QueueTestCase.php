@@ -48,7 +48,7 @@ abstract class QueueTestCase extends TestCase
 
         $job = $queue->consume();
 
-        $this->assertEquals($jobId, $job->getId());
+        $this->assertEquals($jobId, $job?->getId());
         $this->assertEquals(0, $queue->size());
     }
 
@@ -56,6 +56,18 @@ abstract class QueueTestCase extends TestCase
     {
         $queue = static::newQueue();
         $queue->push(new JobDescriptor('test', ['foo' => 'value']));
+
+        $this->assertEquals(1, $queue->size());
+
+        $job = $queue->consume();
+
+        $this->assertEquals('test', $job->getName());
+    }
+
+    public function testPushRaw()
+    {
+        $queue = static::newQueue();
+        $queue->pushRaw(new JobDescriptor('test', ['foo' => 'value']));
 
         $this->assertEquals(1, $queue->size());
     }
@@ -72,5 +84,29 @@ abstract class QueueTestCase extends TestCase
         $queue->purge();
 
         $this->assertEquals(0, $queue->size());
+    }
+
+    public function testReleaseJob()
+    {
+        $queue = static::newQueue();
+        $queue->push(new JobDescriptor('test', ['foo' => 'value']));
+
+        $this->assertEquals(1, $queue->size());
+
+        $job = $queue->consume();
+
+        $this->assertEquals(1, $job->getAttempts());
+        $this->assertEquals(0, $queue->size());
+        $this->assertFalse($job->isReleased());
+
+        $job->release();
+
+        $this->assertEquals(1, $queue->size());
+        $this->assertTrue($job->isReleased());
+
+        $job = $queue->consume();
+
+        $this->assertEquals(0, $queue->size());
+        $this->assertEquals(2, $job->getAttempts());
     }
 }

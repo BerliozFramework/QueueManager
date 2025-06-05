@@ -15,7 +15,9 @@ namespace Berlioz\QueueManager\Tests\Queue;
 use Berlioz\QueueManager\Queue\DbQueue;
 use Berlioz\QueueManager\Queue\QueueInterface;
 use Hector\Connection\Connection;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
+#[RequiresPhpExtension('pdo_sqlite')]
 class DbQueueTest extends QueueTestCase
 {
     public static function newQueue(): QueueInterface

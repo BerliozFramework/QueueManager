@@ -3,7 +3,7 @@
  * This file is part of Berlioz framework.
  *
  * @license   https://opensource.org/licenses/MIT MIT License
- * @copyright 2025 Ronan GIRON
+ * @copyright 2024 Ronan GIRON
  * @author    Ronan GIRON <https://github.com/ElGigi>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -12,125 +12,65 @@
 
 namespace Berlioz\QueueManager\Tests\Queue;
 
-use Berlioz\QueueManager\Job\JobDescriptorInterface;
-use Berlioz\QueueManager\Job\RedisJob;
+use Berlioz\QueueManager\Queue\QueueInterface;
 use Berlioz\QueueManager\Queue\RedisQueue;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Redis;
+use RedisException;
 
-class RedisQueueTest extends TestCase
+#[RequiresPhpExtension('redis')]
+class RedisQueueTest extends QueueTestCase
 {
-    private Redis $redisMock;
-    private RedisQueue $queue;
+    private static ?Redis $redis = null;
+
+    public static function setUpBeforeClass(): void
+    {
+        try {
+            self::$redis = new Redis();
+            self::$redis->connect('127.0.0.1', 6379, 1);
+        } catch (RedisException) {
+            self::markTestSkipped('Redis is not available on 127.0.0.1:6379.');
+        }
+    }
 
     protected function setUp(): void
     {
-        $this->redisMock = $this->createMock(Redis::class);
-        $this->queue = new RedisQueue($this->redisMock, 'testQueue');
+        self::$redis->flushAll();
     }
 
-    public function testGetName()
+    public static function newQueue(): QueueInterface
     {
-        $this->assertSame('testQueue', $this->queue->getName());
-    }
-
-    public function testSize()
-    {
-        $this->redisMock
-            ->method('llen')
-            ->with('testQueue')
-            ->willReturn(5);
-
-        $this->assertSame(5, $this->queue->size());
-    }
-
-    public function testConsumeReturnsJob()
-    {
-        $jobData = json_encode(['jobId' => '123', 'payload' => '{"key":"value"}', 'attempts' => 0]);
-
-        $this->redisMock
-            ->method('lpop')
-            ->with('testQueue')
-            ->willReturn($jobData);
-
-        $job = $this->queue->consume();
-        $this->assertInstanceOf(RedisJob::class, $job);
-        $this->assertSame('123', $job->getId());
-    }
-
-    public function testConsumeReturnsNullWhenEmpty()
-    {
-        $this->redisMock
-            ->method('lpop')
-            ->with('testQueue')
-            ->willReturn(false);
-
-        $this->assertNull($this->queue->consume());
-    }
-
-    public function testPushReturnsJobId()
-    {
-        $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
-        $jobDescriptorMock->method('jsonSerialize')->willReturn(['key' => 'value']);
-
-        $this->redisMock
-            ->expects($this->once())
-            ->method('rPush')
-            ->with(
-                'testQueue',
-                $this->callback(function ($jobData) {
-                    $decoded = json_decode($jobData, true);
-                    return isset($decoded['jobId'], $decoded['payload']) && $decoded['payload'] === '{"key":"value"}';
-                })
-            );
-
-        $jobId = $this->queue->push($jobDescriptorMock);
-        $this->assertNotEmpty($jobId);
-    }
-
-    public function testPushWithDelayAddsToDelayedQueue()
-    {
-        $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
-        $jobDescriptorMock->method('jsonSerialize')->willReturn(['key' => 'value']);
-
-        $this->redisMock
-            ->expects($this->once())
-            ->method('zadd')
-            ->with('testQueue:delayed', ['NX'], $this->greaterThan(time()), $this->callback(function ($jobData) {
-                $decoded = json_decode($jobData, true);
-                return isset($decoded['jobId'], $decoded['payload']) && $decoded['payload'] === '{"key":"value"}';
-            }));
-
-        $jobId = $this->queue->push($jobDescriptorMock, 10);
-        $this->assertNotEmpty($jobId);
+        return new RedisQueue(redis: self::$redis, name: 'default');
     }
 
     public function testFreeDelayedJobs()
     {
+        $redisMock = $this->createMock(Redis::class);
+        $queue = new RedisQueue($redisMock, 'testQueue');
         $jobData = json_encode(['jobId' => '123', 'payload' => '{"key":"value"}', 'attempts' => 0]);
 
-        $this->redisMock
+        $redisMock
             ->expects($this->once())
             ->method('set')
             ->with('testQueue:delayed:lock', '1', ['nx', 'ex' => 10])
             ->willReturn(true);
 
-        $this->redisMock
+        $redisMock
             ->expects($this->once())
             ->method('zrangebyscore')
             ->with('testQueue:delayed', '-inf', (string)time())
             ->willReturn([$jobData]);
 
-        $this->redisMock
+        $redisMock
             ->expects($this->once())
             ->method('zrem')
             ->with('testQueue:delayed', $jobData);
 
-        $this->redisMock
+        $redisMock
             ->expects($this->once())
             ->method('rpush')
             ->with('testQueue', $jobData);
 
-        $this->queue->freeDelayedJobs();
+        $queue->freeDelayedJobs();
     }
 }
