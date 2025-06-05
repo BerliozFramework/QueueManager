@@ -29,6 +29,7 @@
   },
   "require-dev": {
     "ext-redis": "*",
+    "ext-amqp": "*",
     "phpunit/phpunit": "^11.0",
     "phpstan/phpstan": "^1.10",
     "aws/aws-sdk-php": "^3.316",
@@ -37,6 +38,7 @@
   "suggest": {
     "ext-pcntl": "Tu use signals to exit worker",
     "ext-redis": "To use Redis queue",
+    "ext-amqp": "To use AMQP queue",
     "aws/aws-sdk-php": "To use AWS SQS service",
     "hectororm/query": "To use database queue"
   },
