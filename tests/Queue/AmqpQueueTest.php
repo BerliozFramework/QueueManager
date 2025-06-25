@@ -16,7 +16,7 @@ use AMQPConnection;
 use Berlioz\QueueManager\Job\JobDescriptor;
 use Berlioz\QueueManager\Queue\AmqpQueue;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use RedisException;
+use AMQPConnectionException;
 
 #[RequiresPhpExtension('amqp')]
 class AmqpQueueTest extends QueueTestCase
@@ -34,7 +34,7 @@ class AmqpQueueTest extends QueueTestCase
                 'vhost' => '/',
             ]);
             self::$amqpConnection->connect();
-        } catch (RedisException) {
+        } catch (AMQPConnectionException) {
             self::markTestSkipped('RabbitMQ is not available on 127.0.0.1:5672.');
         }
     }
