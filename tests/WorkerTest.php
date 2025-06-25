@@ -18,6 +18,7 @@ use Berlioz\QueueManager\Queue\QueueInterface;
 use Berlioz\QueueManager\Worker;
 use Berlioz\QueueManager\WorkerExit;
 use Berlioz\QueueManager\WorkerOptions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
@@ -163,5 +164,61 @@ class WorkerTest extends TestCase
         $this->assertSame(WorkerExit::SHOULD_TERMINATE->code(), $exitCode);
 
         unlink($killFile); // Cleanup
+    }
+
+    public static function provideJobAndOptionsForDelay()
+    {
+        return [
+            [
+                'jobAttempts' => 1,
+                'backoffTime' => 30,
+                'backoffMultiplier' => 2,
+                'exceptedDelay' => 30,
+            ],
+            [
+                'jobAttempts' => 2,
+                'backoffTime' => 30,
+                'backoffMultiplier' => 2,
+                'exceptedDelay' => 60,
+            ],
+            [
+                'jobAttempts' => 3,
+                'backoffTime' => 30,
+                'backoffMultiplier' => 2,
+                'exceptedDelay' => 120,
+            ],
+            [
+                'jobAttempts' => 4,
+                'backoffTime' => 30,
+                'backoffMultiplier' => 2,
+                'exceptedDelay' => 240,
+            ],
+            [
+                'jobAttempts' => 3,
+                'backoffTime' => 30,
+                'backoffMultiplier' => 1,
+                'exceptedDelay' => 30,
+            ],
+            [
+                'jobAttempts' => 3,
+                'backoffTime' => 1,
+                'backoffMultiplier' => 2,
+                'exceptedDelay' => 4,
+            ],
+        ];
+    }
+
+    #[DataProvider('provideJobAndOptionsForDelay')]
+    public function testNextDelayAfterFailure(
+        int $jobAttempts,
+        int $backoffTime,
+        int $backoffMultiplier,
+        int $exceptedDelay
+    ) {
+        $options = new WorkerOptions(backoffTime: $backoffTime, backoffMultiplier: $backoffMultiplier);
+        $jobMock = $this->createMock(JobInterface::class);
+        $jobMock->method('getAttempts')->willReturn($jobAttempts);
+
+        $this->assertEquals($exceptedDelay, $this->worker->nextDelayAfterFailure($jobMock, $options));
     }
 }

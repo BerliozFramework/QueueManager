@@ -205,7 +205,7 @@ class Worker implements LoggerAwareInterface
                 );
             } catch (Throwable $exception) {
                 // Release job
-                $job->release($options->backoffTime);
+                $job->release($this->nextDelayAfterFailure($job, $options));
 
                 $this->logger?->error(
                     sprintf(
@@ -236,5 +236,22 @@ class Worker implements LoggerAwareInterface
     public function executeJob(JobInterface $job): void
     {
         $this->jobHandlerManager->handle($job);
+    }
+
+    /**
+     * Next delay after job failure.
+     *
+     * @param JobInterface $job
+     * @param WorkerOptions $options
+     *
+     * @return int
+     */
+    public function nextDelayAfterFailure(JobInterface $job, WorkerOptions $options): int
+    {
+        if ($job->getAttempts() <= 1) {
+            return $options->backoffTime;
+        }
+
+        return $options->backoffTime * pow(max($options->backoffMultiplier, 1), $job->getAttempts() - 1);
     }
 }

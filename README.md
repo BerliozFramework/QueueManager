@@ -117,14 +117,15 @@ $worker->setLogger(new NullLogger());
 
 // Configure worker options
 $options = new WorkerOptions(
-    name: 'worker',   // Worker name
-    limit: 10,        // Max jobs to execute
-    memoryLimit: 128, // Memory limit in MB
-    timeLimit: 60,    // Time limit in seconds
-    killFilePath: 10, // File to kill process
-    sleep: 2,         // Sleep time between jobs in seconds
-    stopNoJob: true,  // Stop if no job
-    backoffTime: 0,   // Time to wait before retry failed job
+    name: 'worker',       // Worker name
+    limit: 10,            // Max jobs to execute
+    memoryLimit: 128,     // Memory limit in MB
+    timeLimit: 60,        // Time limit in seconds
+    killFilePath: 10,     // File to kill process
+    sleep: 2,             // Sleep time between jobs in seconds
+    stopNoJob: true,      // Stop if no job
+    backoffTime: 0,       // Time to wait before retry failed job
+    backoffMultiplier: 1, // Multiplier for backoff time
 );
 
 // Create a queue instance

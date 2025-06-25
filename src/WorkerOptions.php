@@ -26,6 +26,7 @@ readonly class WorkerOptions
         public int|float $sleep = 0,
         public int|float $sleepNoJob = 1,
         public int $backoffTime = 0,
+        public int $backoffMultiplier = 1,
     ) {
     }
 
@@ -47,6 +48,7 @@ readonly class WorkerOptions
         $logger?->debug(sprintf('Sleep between job consumption: %s', $this->unit($this->sleep, 'second(s)')));
         $logger?->debug(sprintf('Sleep if no job: %s', $this->unit($this->sleepNoJob, 'second(s)')));
         $logger?->debug(sprintf('Backoff time: %s', $this->unit($this->backoffTime, 'second(s)')));
+        $logger?->debug(sprintf('Backoff multiplier: %s', $this->unit($this->backoffMultiplier)));
     }
 
     private function unit(int|float $value, ?string $unit = null): string
