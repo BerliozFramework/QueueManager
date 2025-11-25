@@ -135,6 +135,26 @@ $queue = new MemoryQueue();
 $exitCode = $worker->run($queue, $options);
 ```
 
+Workers can also define retry behavior when a job fails.
+When using an exponential backoff, the delay increases for each retry based on the base delay and the multiplier.
+
+The delay for retry **n** is computed as:
+
+```
+delay_n = base_delay × (multiplier ^ (n - 1))
+```
+
+Examples:
+
+| Base delay | Multiplier | Retry 1 | Retry 2 | Retry 3 | Retry 4 | Retry 5 | Total before giving up |
+|------------|------------|---------|---------|---------|---------|---------|------------------------|
+| 10         | —          | 10      | 10      | 10      | 10      | 10      | 50s                    |
+| 2          | 2          | 2       | 4       | 8       | 16      | 32      | 62s                    |
+| 10         | 2          | 10      | 20      | 40      | 80      | 160     | 310s                   |
+| 1          | 3          | 1       | 3       | 9       | 27      | 81      | 121s                   |
+| 30         | 2          | 30      | 60      | 120     | 240     | 480     | 930s                   |
+| 60         | 2          | 60      | 120     | 240     | 480     | 960     | 1860s                  |
+
 ### Queues
 
 #### DbQueue
