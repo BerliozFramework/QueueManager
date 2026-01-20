@@ -35,12 +35,12 @@ class AwsSqsQueueTest extends TestCase
         );
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $this->assertSame('testQueue', $this->queue->getName());
     }
 
-    public function testSize()
+    public function testSize(): void
     {
         $this->sqsClientMock
             ->method('__call')
@@ -58,7 +58,7 @@ class AwsSqsQueueTest extends TestCase
         $this->assertSame(5, $this->queue->size());
     }
 
-    public function testConsumeReturnsJob()
+    public function testConsumeReturnsJob(): void
     {
         $message = [
             'Attributes' => [],
@@ -87,7 +87,7 @@ class AwsSqsQueueTest extends TestCase
         $this->assertSame('abc123', $job->getAwsResult()['ReceiptHandle']);
     }
 
-    public function testConsumeThrowsChecksumException()
+    public function testConsumeThrowsChecksumException(): void
     {
         $this->sqsClientMock
             ->method('__call')
@@ -120,7 +120,7 @@ class AwsSqsQueueTest extends TestCase
         $this->queue->consume();
     }
 
-    public function testPushReturnsJobId()
+    public function testPushReturnsJobId(): void
     {
         $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
 
@@ -142,7 +142,7 @@ class AwsSqsQueueTest extends TestCase
         $this->assertSame('msg123', $jobId);
     }
 
-    public function testPurge()
+    public function testPurge(): void
     {
         $this->sqsClientMock
             ->expects($this->once())
@@ -159,7 +159,7 @@ class AwsSqsQueueTest extends TestCase
         $this->queue->purge();
     }
 
-    public function testRelease()
+    public function testRelease(): void
     {
         $jobMock = $this->createMock(SqsJob::class);
         $jobMock->method('getAwsResult')
@@ -182,7 +182,7 @@ class AwsSqsQueueTest extends TestCase
         $this->queue->release($jobMock, 5);
     }
 
-    public function testDelete()
+    public function testDelete(): void
     {
         $jobMock = $this->createMock(SqsJob::class);
         $jobMock->method('getId')->willReturn('msg123');

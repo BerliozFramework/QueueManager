@@ -31,13 +31,13 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager = new JobHandlerManager($this->containerMock);
     }
 
-    public function testAddHandlerSuccessfullyAddsHandler()
+    public function testAddHandlerSuccessfullyAddsHandler(): void
     {
         $result = $this->jobHandlerManager->addHandler('TestJob', JobHandlerInterface::class);
         $this->assertSame($this->jobHandlerManager, $result);
     }
 
-    public function testAddHandlerThrowsExceptionIfHandlerExists()
+    public function testAddHandlerThrowsExceptionIfHandlerExists(): void
     {
         $this->jobHandlerManager->addHandler('TestJob', JobHandlerInterface::class);
 
@@ -47,7 +47,7 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->addHandler('TestJob', JobHandlerInterface::class);
     }
 
-    public function testHandleUsesCorrectHandler()
+    public function testHandleUsesCorrectHandler(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $handlerMock = $this->createMock(JobHandlerInterface::class);
@@ -67,7 +67,7 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->handle($jobMock);
     }
 
-    public function testHandleUsesCorrectHandlerWithWildcard()
+    public function testHandleUsesCorrectHandlerWithWildcard(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $handlerMock = $this->createMock(JobHandlerInterface::class);
@@ -87,7 +87,7 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->handle($jobMock);
     }
 
-    public function testHandleThrowsExceptionIfNoHandlerAndNoDefault()
+    public function testHandleThrowsExceptionIfNoHandlerAndNoDefault(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $jobMock->method('getName')->willReturn('UnknownJob');
@@ -98,7 +98,7 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->handle($jobMock);
     }
 
-    public function testHandleUsesDefaultHandlerIfNoSpecificHandlerExists()
+    public function testHandleUsesDefaultHandlerIfNoSpecificHandlerExists(): void
     {
         $defaultHandlerMock = $this->createMock(JobHandlerInterface::class);
         $jobMock = $this->createMock(JobInterface::class);
@@ -114,7 +114,7 @@ class JobHandlerManagerTest extends TestCase
         $jobHandlerManager->handle($jobMock);
     }
 
-    public function testHandleThrowsExceptionIfHandlerFromContainerIsInvalid()
+    public function testHandleThrowsExceptionIfHandlerFromContainerIsInvalid(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $jobMock->method('getName')->willReturn('TestJob');
@@ -132,7 +132,7 @@ class JobHandlerManagerTest extends TestCase
         $this->jobHandlerManager->handle($jobMock);
     }
 
-    public function testDebugInfoReturnsCorrectStructure()
+    public function testDebugInfoReturnsCorrectStructure(): void
     {
         $debugInfo = $this->jobHandlerManager->__debugInfo();
 

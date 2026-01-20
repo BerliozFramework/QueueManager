@@ -21,7 +21,7 @@ abstract class QueueTestCase extends TestCase
 {
     abstract public static function newQueue(): QueueInterface;
 
-    public function testSize()
+    public function testSize(): void
     {
         $queue = static::newQueue();
 
@@ -41,7 +41,7 @@ abstract class QueueTestCase extends TestCase
 
     }
 
-    public function testConsume()
+    public function testConsume(): void
     {
         $queue = static::newQueue();
         $jobId = $queue->push(new JobDescriptor('test', ['foo' => 'value']));
@@ -52,7 +52,7 @@ abstract class QueueTestCase extends TestCase
         $this->assertEquals(0, $queue->size());
     }
 
-    public function testPush()
+    public function testPush(): void
     {
         $queue = static::newQueue();
         $queue->push(new JobDescriptor('test', ['foo' => 'value']));
@@ -64,7 +64,7 @@ abstract class QueueTestCase extends TestCase
         $this->assertEquals('test', $job->getName());
     }
 
-    public function testPushRaw()
+    public function testPushRaw(): void
     {
         $queue = static::newQueue();
         $queue->pushRaw(new JobDescriptor('test', ['foo' => 'value']));
@@ -72,7 +72,7 @@ abstract class QueueTestCase extends TestCase
         $this->assertEquals(1, $queue->size());
     }
 
-    public function testPurge()
+    public function testPurge(): void
     {
         $queue = static::newQueue();
 
@@ -86,7 +86,7 @@ abstract class QueueTestCase extends TestCase
         $this->assertEquals(0, $queue->size());
     }
 
-    public function testReleaseJob()
+    public function testReleaseJob(): void
     {
         $queue = static::newQueue();
         $queue->push(new JobDescriptor('test', ['foo' => 'value']));

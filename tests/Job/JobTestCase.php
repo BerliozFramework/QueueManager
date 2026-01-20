@@ -29,7 +29,7 @@ abstract class JobTestCase extends TestCase
         return $queue->consume();
     }
 
-    public function testGetId()
+    public function testGetId(): void
     {
         $queue = $this->newQueue();
         $jobId = $queue->push(new JobDescriptor('test', ['foo' => 'value']));
@@ -38,14 +38,14 @@ abstract class JobTestCase extends TestCase
         $this->assertEquals($jobId, $job->getId());
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $job = $this->newJob();
 
         $this->assertEquals('bar', $job->getName());
     }
 
-    public function testGetAttempts()
+    public function testGetAttempts(): void
     {
         $job = $this->newJob();
 
@@ -57,14 +57,14 @@ abstract class JobTestCase extends TestCase
         $this->assertEquals(2, $job->getAttempts());
     }
 
-    public function testGetPayload()
+    public function testGetPayload(): void
     {
         $job = $this->newJob();
 
         $this->assertEquals(['foo' => 'value'], $job->getPayload()->getArrayCopy());
     }
 
-    public function testGetQueue()
+    public function testGetQueue(): void
     {
         $queue = $this->newQueue();
         $queue->push(new JobDescriptor('test', ['foo' => 'value']));
@@ -74,7 +74,7 @@ abstract class JobTestCase extends TestCase
         $this->assertEquals('default', $job->getQueue()->getName());
     }
 
-    public function testRelease()
+    public function testRelease(): void
     {
         $job = $this->newJob();
 
@@ -85,7 +85,7 @@ abstract class JobTestCase extends TestCase
         $this->assertEquals(1, $job->getQueue()->size());
     }
 
-    public function testRelease_withDelay()
+    public function testRelease_withDelay(): void
     {
         $job = $this->newJob();
 
@@ -100,7 +100,7 @@ abstract class JobTestCase extends TestCase
         $this->assertEquals(1, $job->getQueue()->size());
     }
 
-    public function testDelete()
+    public function testDelete(): void
     {
         $job = $this->newJob();
 

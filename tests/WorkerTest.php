@@ -37,7 +37,7 @@ class WorkerTest extends TestCase
         $this->worker = new Worker($this->jobHandlerMock);
     }
 
-    public function testMemoryLimitExceeded()
+    public function testMemoryLimitExceeded(): void
     {
         $workerOptions = new WorkerOptions(memoryLimit: 10); // 10 MB
 
@@ -51,7 +51,7 @@ class WorkerTest extends TestCase
         $this->assertTrue($workerStub->memoryLimitExceeded($workerOptions));
     }
 
-    public function testTimeLimitExceeded()
+    public function testTimeLimitExceeded(): void
     {
         $workerOptions = new WorkerOptions(timeLimit: 1); // 1 second
         $startTime = 0;
@@ -66,7 +66,7 @@ class WorkerTest extends TestCase
         $this->assertTrue($workerStub->timeLimitExceeded($startTime, $workerOptions));
     }
 
-    public function testKillFileExists()
+    public function testKillFileExists(): void
     {
         $killFile = tempnam(sys_get_temp_dir(), 'berlioz');
         $workerOptions = new WorkerOptions(killFilePath: $killFile);
@@ -76,7 +76,7 @@ class WorkerTest extends TestCase
         unlink($workerOptions->killFilePath);
     }
 
-    public function testContinueShouldTerminate()
+    public function testContinueShouldTerminate(): void
     {
         $workerStub = $this->getMockBuilder(Worker::class)
             ->setConstructorArgs([$this->jobHandlerMock])
@@ -92,7 +92,7 @@ class WorkerTest extends TestCase
         $this->assertSame(WorkerExit::SHOULD_TERMINATE, $workerExit);
     }
 
-    public function testExecuteJobCallsJobHandler()
+    public function testExecuteJobCallsJobHandler(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
 
@@ -104,7 +104,7 @@ class WorkerTest extends TestCase
         $this->worker->executeJob($jobMock);
     }
 
-    public function testRunProcessesJobSuccessfully()
+    public function testRunProcessesJobSuccessfully(): void
     {
         $loggerMock = $this->createMock(LoggerInterface::class);
         $jobMock = $this->createMock(JobInterface::class);
@@ -131,7 +131,7 @@ class WorkerTest extends TestCase
         $this->assertSame(WorkerExit::LIMIT_EXCEEDED->code(), $exitCode);
     }
 
-    public function testRunHandlesJobException()
+    public function testRunHandlesJobException(): void
     {
         $loggerMock = $this->createMock(LoggerInterface::class);
         $jobMock = $this->createMock(JobInterface::class);
@@ -151,7 +151,7 @@ class WorkerTest extends TestCase
         $this->assertSame(WorkerExit::LIMIT_EXCEEDED->code(), $exitCode);
     }
 
-    public function testRunExitsWhenKillFileExists()
+    public function testRunExitsWhenKillFileExists(): void
     {
         $loggerMock = $this->createMock(LoggerInterface::class);
         $this->worker->setLogger($loggerMock);
@@ -166,7 +166,7 @@ class WorkerTest extends TestCase
         unlink($killFile); // Cleanup
     }
 
-    public static function provideJobAndOptionsForDelay()
+    public static function provideJobAndOptionsForDelay(): array
     {
         return [
             [
@@ -214,7 +214,7 @@ class WorkerTest extends TestCase
         int $backoffTime,
         int $backoffMultiplier,
         int $exceptedDelay
-    ) {
+    ): void {
         $options = new WorkerOptions(backoffTime: $backoffTime, backoffMultiplier: $backoffMultiplier);
         $jobMock = $this->createMock(JobInterface::class);
         $jobMock->method('getAttempts')->willReturn($jobAttempts);

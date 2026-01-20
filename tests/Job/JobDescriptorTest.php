@@ -27,13 +27,13 @@ class JobDescriptorTest extends TestCase
             payload: ['foo' => 'bar'],
         );
     }
-    public function testGetName()
+    public function testGetName(): void
     {
         $job = $this->createJobDescriptor();
         $this->assertEquals('bar', $job->getName());
     }
 
-    public function testGetPayload()
+    public function testGetPayload(): void
     {
         $job = $this->createJobDescriptor();
         $this->assertEquals(['foo' => 'bar'], $job->getPayload()->getArrayCopy());

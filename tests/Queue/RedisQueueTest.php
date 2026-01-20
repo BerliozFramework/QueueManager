@@ -48,7 +48,7 @@ class RedisQueueTest extends QueueTestCase
         return new RedisQueue(redis: self::$redis, name: 'default');
     }
 
-    public function testFreeDelayedJobs()
+    public function testFreeDelayedJobs(): void
     {
         $redisMock = $this->createMock(Redis::class);
         $queue = new RedisQueue($redisMock, 'testQueue');

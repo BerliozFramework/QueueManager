@@ -38,12 +38,12 @@ class QueueManagerTest extends TestCase
         $this->queueManager = new QueueManager($this->primaryQueueMock, $this->secondaryQueueMock);
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         $this->assertCount(2, $this->queueManager);
     }
 
-    public function testGetQueues()
+    public function testGetQueues(): void
     {
         $queues = iterator_to_array($this->queueManager->getQueues(), false);
 
@@ -52,7 +52,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($this->secondaryQueueMock, $queues[1]);
     }
 
-    public function testFilterReturnsFilteredQueueManager()
+    public function testFilterReturnsFilteredQueueManager(): void
     {
         $filteredQueueManager = $this->queueManager->filter('SecondaryQueue');
 
@@ -61,7 +61,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($this->secondaryQueueMock, $filteredQueues[0]);
     }
 
-    public function testFilterReturnsFilteredQueueManagerWithWildcard()
+    public function testFilterReturnsFilteredQueueManagerWithWildcard(): void
     {
         $filteredQueueManager = $this->queueManager->filter('Secondary*');
 
@@ -70,7 +70,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($this->secondaryQueueMock, $filteredQueues[0]);
     }
 
-    public function testFilterReturnsFilteredQueueManagerOrder()
+    public function testFilterReturnsFilteredQueueManagerOrder(): void
     {
         $filteredQueueManager = $this->queueManager->filter('Secondary*', 'Primary*');
 
@@ -80,7 +80,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($this->primaryQueueMock, $filteredQueues[1]);
     }
 
-    public function testFilterThrowsExceptionIfQueueNotFound()
+    public function testFilterThrowsExceptionIfQueueNotFound(): void
     {
         $this->expectException(QueueManagerException::class);
         $this->expectExceptionMessage('Queue `NonExistentQueue` not found');
@@ -88,7 +88,7 @@ class QueueManagerTest extends TestCase
         $this->queueManager->filter('NonExistentQueue');
     }
 
-    public function testStats()
+    public function testStats(): void
     {
         $this->primaryQueueMock->method('size')->willReturn(5);
         $this->secondaryQueueMock->method('size')->willReturn(10);
@@ -102,12 +102,12 @@ class QueueManagerTest extends TestCase
         );
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $this->assertSame('PrimaryQueue, SecondaryQueue', $this->queueManager->getName());
     }
 
-    public function testSize()
+    public function testSize(): void
     {
         $this->primaryQueueMock->method('size')->willReturn(5);
         $this->secondaryQueueMock->method('size')->willReturn(10);
@@ -115,7 +115,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame(15, $this->queueManager->size());
     }
 
-    public function testConsumeReturnsJobFromFirstQueue()
+    public function testConsumeReturnsJobFromFirstQueue(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $this->primaryQueueMock->method('consume')->willReturn($jobMock);
@@ -125,7 +125,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($jobMock, $job);
     }
 
-    public function testConsumeReturnsJobFromSecondQueueIfFirstIsEmpty()
+    public function testConsumeReturnsJobFromSecondQueueIfFirstIsEmpty(): void
     {
         $jobMock = $this->createMock(JobInterface::class);
         $this->primaryQueueMock->method('consume')->willReturn(null);
@@ -136,7 +136,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame($jobMock, $job);
     }
 
-    public function testConsumeReturnsNullIfNoJobsAvailable()
+    public function testConsumeReturnsNullIfNoJobsAvailable(): void
     {
         $this->primaryQueueMock->method('consume')->willReturn(null);
         $this->secondaryQueueMock->method('consume')->willReturn(null);
@@ -144,7 +144,7 @@ class QueueManagerTest extends TestCase
         $this->assertNull($this->queueManager->consume());
     }
 
-    public function testPushToSpecificQueue()
+    public function testPushToSpecificQueue(): void
     {
         $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
 
@@ -159,7 +159,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame('JobID123', $jobId);
     }
 
-    public function testPushThrowsExceptionIfQueueNotFound()
+    public function testPushThrowsExceptionIfQueueNotFound(): void
     {
         $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
 
@@ -169,7 +169,7 @@ class QueueManagerTest extends TestCase
         $this->queueManager->push($jobDescriptorMock, 0, 'NonExistentQueue');
     }
 
-    public function testPushUsesPrimaryQueueByDefault()
+    public function testPushUsesPrimaryQueueByDefault(): void
     {
         $jobDescriptorMock = $this->createMock(JobDescriptorInterface::class);
 
@@ -184,7 +184,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame('JobID456', $jobId);
     }
 
-    public function testPushRawToSpecificQueue()
+    public function testPushRawToSpecificQueue(): void
     {
         $payload = ['data' => 'value'];
 
@@ -199,7 +199,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame('JobID789', $jobId);
     }
 
-    public function testPushRawThrowsExceptionIfQueueNotFound()
+    public function testPushRawThrowsExceptionIfQueueNotFound(): void
     {
         $payload = ['data' => 'value'];
 
@@ -209,7 +209,7 @@ class QueueManagerTest extends TestCase
         $this->queueManager->pushRaw($payload, 0, 'NonExistentQueue');
     }
 
-    public function testPushRawUsesPrimaryQueueByDefault()
+    public function testPushRawUsesPrimaryQueueByDefault(): void
     {
         $payload = ['data' => 'value'];
 
@@ -224,7 +224,7 @@ class QueueManagerTest extends TestCase
         $this->assertSame('JobID111', $jobId);
     }
 
-    public function testPurge()
+    public function testPurge(): void
     {
         $purgeableQueueMock = $this->createMock(PurgeableQueueInterface::class);
         $purgeableQueueMock
