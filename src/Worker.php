@@ -167,6 +167,17 @@ class Worker implements LoggerAwareInterface
             // Sleep between get new job
             $nbJobsExecuted > 0 && usleep((int)($options->sleep * 1000 * 1000));
 
+            // Wait for rate limit
+            if ($options->rateLimiter->reached()) {
+                $this->logger?->debug(
+                    'Rate limit reached, wait {time} seconds...',
+                    [
+                        'time' => round($options->rateLimiter->getWaitTime() / 1000 / 1000, 3),
+                    ]
+                );
+                $options->rateLimiter->wait();
+            }
+
             // Get a job to consume
             $job = $queue->consume();
 
@@ -177,6 +188,7 @@ class Worker implements LoggerAwareInterface
             }
 
             // Increment nb job to execute
+            $options->rateLimiter->pop();
             $nbJobsExecuted++;
 
             $this->logger?->info(

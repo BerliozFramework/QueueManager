@@ -12,6 +12,8 @@
 
 namespace Berlioz\QueueManager;
 
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use Psr\Log\LoggerInterface;
 
 readonly class WorkerOptions
@@ -27,6 +29,7 @@ readonly class WorkerOptions
         public int|float $sleepNoJob = 1,
         public int $backoffTime = 0,
         public int $backoffMultiplier = 1,
+        public RateLimiterInterface $rateLimiter = new NullRateLimiter(),
     ) {
     }
 

@@ -15,6 +15,7 @@ namespace Berlioz\QueueManager\Tests;
 use Berlioz\QueueManager\Handler\JobHandlerInterface;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Queue\QueueInterface;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use Berlioz\QueueManager\Worker;
 use Berlioz\QueueManager\WorkerExit;
 use Berlioz\QueueManager\WorkerOptions;
@@ -164,6 +165,28 @@ class WorkerTest extends TestCase
         $this->assertSame(WorkerExit::SHOULD_TERMINATE->code(), $exitCode);
 
         unlink($killFile); // Cleanup
+    }
+
+    public function testRunWaitOnRateLimiter(): void
+    {
+        $rateLimiterMock = $this->createMock(RateLimiterInterface::class);
+        $jobMock = $this->createMock(JobInterface::class);
+        $options = new WorkerOptions(limit: 1, rateLimiter: $rateLimiterMock);
+
+        // Mock rate limiter behavior: reached limit, so it must wait
+        $rateLimiterMock->expects($this->once())->method('reached')->willReturn(true);
+        $rateLimiterMock->expects($this->once())->method('wait');
+
+        // After consuming the job, it must pop from limiter
+        $rateLimiterMock->expects($this->once())->method('pop');
+
+        $this->queueMock->method('consume')->willReturn($jobMock);
+        $jobMock->method('getId')->willReturn('Job123');
+        $jobMock->method('getQueue')->willReturn($this->queueMock);
+
+        $exitCode = $this->worker->run($this->queueMock, $options);
+
+        $this->assertSame(WorkerExit::LIMIT_EXCEEDED->code(), $exitCode);
     }
 
     public static function provideJobAndOptionsForDelay(): array
