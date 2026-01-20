@@ -21,6 +21,8 @@ use Berlioz\QueueManager\Job\JobForQueue;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Queue\PurgeableQueueInterface;
 use Berlioz\QueueManager\Queue\QueueInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use Countable;
 use DateInterval;
 use DateTimeInterface;
@@ -128,6 +130,14 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
     /**
      * @inheritDoc
      */
+    public function getRateLimiter(): RateLimiterInterface
+    {
+        return new NullRateLimiter();
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function size(): int
     {
         $total = 0;
@@ -146,6 +156,26 @@ readonly class QueueManager implements QueueInterface, PurgeableQueueInterface, 
     {
         /** @var QueueInterface $queue */
         foreach ($this->getQueues() as $queue) {
+            // Rate limit reached for queue?
+            if (true === $queue->getRateLimiter()->reached()) {
+                continue;
+            }
+
+            if (null !== ($job = $queue->consume())) {
+                return $job;
+            }
+        }
+
+        return null;
+    }
+
+    private function consumeInAllQueues(): ?JobInterface
+    {
+        foreach ($this->getQueues() as $queue) {
+            if ($queue->getRateLimiter()->reached()) {
+                continue;
+            }
+
             if (null !== ($job = $queue->consume())) {
                 return $job;
             }

@@ -23,11 +23,13 @@ use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\AmqpJob;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 use Exception;
 
-class_exists(AMQPConnection::class) || throw QueueManagerException::missingPackage('ext-amqp');
+extension_loaded('amqp') || throw QueueManagerException::missingPackage('ext-amqp');
 
 readonly class AmqpQueue extends AbstractQueue implements PurgeableQueueInterface
 {
@@ -39,8 +41,9 @@ readonly class AmqpQueue extends AbstractQueue implements PurgeableQueueInterfac
         private AMQPConnection $connection,
         string $name = 'default',
         private int $maxAttempts = 5,
+        RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
-        parent::__construct($name);
+        parent::__construct(name: $name, limiter: $limiter);
 
         $this->channel = $this->createChannel($this->connection);
         $this->exchange = $this->createExchange(
@@ -169,10 +172,15 @@ readonly class AmqpQueue extends AbstractQueue implements PurgeableQueueInterfac
     public function consume(): ?JobInterface
     {
         try {
+            // Rate limit reached? Wait...
+            $this->getRateLimiter()->wait();
+
             $envelope = $this->queue->get(AMQP_NOPARAM);
             if (null === $envelope) {
                 return null;
             }
+
+            $this->getRateLimiter()->pop();
 
             return new AmqpJob($envelope, $this);
         } catch (Exception $e) {

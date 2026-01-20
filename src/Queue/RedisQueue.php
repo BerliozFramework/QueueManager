@@ -20,6 +20,8 @@ use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Job\RedisJob;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 use Exception;
@@ -32,8 +34,9 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
     public function __construct(
         private Redis $redis,
         string $name = 'default',
+        RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
-        parent::__construct($name);
+        parent::__construct(name: $name, limiter: $limiter);
     }
 
     /**
@@ -83,6 +86,9 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
     public function consume(): ?RedisJob
     {
         try {
+            // Rate limit reached? Wait...
+            $this->getRateLimiter()->wait();
+
             $this->freeDelayedJobs();
 
             $payload = $this->redis->lpop($this->name);
@@ -95,6 +101,8 @@ readonly class RedisQueue extends AbstractQueue implements QueueInterface
             if (!isset($jobRaw['jobId'], $jobRaw['payload'])) {
                 throw new QueueException('Invalid job structure. Missing required fields: jobId or payload.');
             }
+
+            $this->getRateLimiter()->pop();
 
             return $this->createJob($jobRaw);
         } catch (Exception $e) {

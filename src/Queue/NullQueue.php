@@ -17,6 +17,8 @@ namespace Berlioz\QueueManager\Queue;
 use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 
@@ -33,6 +35,14 @@ readonly class NullQueue implements QueueInterface
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRateLimiter(): RateLimiterInterface
+    {
+        return new NullRateLimiter();
     }
 
     /**

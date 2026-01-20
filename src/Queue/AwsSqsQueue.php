@@ -19,6 +19,8 @@ use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\SqsJob;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 
@@ -31,8 +33,9 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
         private string $queueUrl,
         string $name = 'default',
         private int $retryTime = 30,
+        RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
-        parent::__construct($name);
+        parent::__construct(name: $name, limiter: $limiter);
     }
 
     /**
@@ -79,6 +82,9 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
      */
     public function consume(): ?SqsJob
     {
+        // Rate limit reached? Wait...
+        $this->getRateLimiter()->wait();
+
         $result = $this->sqsClient->receiveMessage([
             'QueueUrl' => $this->queueUrl,
             'VisibilityTimeout' => $this->retryTime,
@@ -93,6 +99,8 @@ readonly class AwsSqsQueue extends AbstractQueue implements PurgeableQueueInterf
         if ($result['MD5OfBody'] !== md5($result['Body'])) {
             throw QueueException::checksum();
         }
+
+        $this->getRateLimiter()->pop();
 
         return new SqsJob($result, $this);
     }

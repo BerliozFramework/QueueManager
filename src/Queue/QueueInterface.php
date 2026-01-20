@@ -17,6 +17,7 @@ namespace Berlioz\QueueManager\Queue;
 use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 
@@ -28,6 +29,13 @@ interface QueueInterface
      * @return string
      */
     public function getName(): string;
+
+    /**
+     * Get rate limiter.
+     *
+     * @return RateLimiterInterface
+     */
+    public function getRateLimiter(): RateLimiterInterface;
 
     /**
      * Number of jobs into queue.

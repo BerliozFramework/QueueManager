@@ -14,11 +14,16 @@ namespace Berlioz\QueueManager\Tests\Queue;
 
 use Berlioz\QueueManager\Queue\MemoryQueue;
 use Berlioz\QueueManager\Queue\QueueInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 
 class MemoryQueueTest extends QueueTestCase
 {
-    public static function newQueue(): QueueInterface
+    public static function newQueue(RateLimiterInterface $limiter = new NullRateLimiter()): QueueInterface
     {
-        return new MemoryQueue(name: 'default');
+        return new MemoryQueue(
+            name: 'default',
+            limiter: $limiter,
+        );
     }
 }

@@ -20,6 +20,8 @@ use Berlioz\QueueManager\Exception\QueueManagerException;
 use Berlioz\QueueManager\Job\DbJob;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeInterface;
 use Hector\Connection\Connection;
@@ -38,8 +40,9 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
         private string $tableName = 'queue_jobs',
         private int $retryTime = 30,
         private int $maxAttempts = 5,
+        RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
-        parent::__construct($name);
+        parent::__construct(name: $name, limiter: $limiter);
     }
 
     private function getRetryDateTimeLimit(): DateTimeInterface
@@ -87,6 +90,9 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
             throw new QueueException('A database transaction is already running');
         }
 
+        // Rate limit reached? Wait...
+        $this->getRateLimiter()->wait();
+
         try {
             $this->connection->beginTransaction();
 
@@ -124,6 +130,8 @@ readonly class DbQueue extends AbstractQueue implements PurgeableQueueInterface
         }
 
         if ($affected === 1) {
+            $this->getRateLimiter()->pop();
+
             return $this->createJob(array_replace($jobRaw, $updatedData));
         }
 

@@ -14,6 +14,8 @@ namespace Berlioz\QueueManager\Tests\Queue;
 
 use Berlioz\QueueManager\Queue\QueueInterface;
 use Berlioz\QueueManager\Queue\RedisQueue;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Redis;
 use RedisException;
@@ -43,9 +45,13 @@ class RedisQueueTest extends QueueTestCase
         self::$redis->flushAll();
     }
 
-    public static function newQueue(): QueueInterface
+    public static function newQueue(RateLimiterInterface $limiter = new NullRateLimiter()): QueueInterface
     {
-        return new RedisQueue(redis: self::$redis, name: 'default');
+        return new RedisQueue(
+            redis: self::$redis,
+            name: 'default',
+            limiter: $limiter,
+        );
     }
 
     public function testFreeDelayedJobs(): void

@@ -20,6 +20,8 @@ use Berlioz\QueueManager\Exception\QueueException;
 use Berlioz\QueueManager\Job\JobDescriptorInterface;
 use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Job\MemoryJob;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -32,8 +34,9 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
         string $name = 'default',
         private int $retryTime = 30,
         private int $maxAttempts = 5,
+        RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
-        parent::__construct($name);
+        parent::__construct(name: $name, limiter: $limiter);
         $this->stack = new ArrayObject();
     }
 
@@ -84,6 +87,9 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
      */
     public function consume(): ?MemoryJob
     {
+        // Rate limit reached? Wait...
+        $this->getRateLimiter()->wait();
+
         foreach ($this->stack as $id => $value) {
             if (false === $this->jobRawCanBeConsumed($value)) {
                 continue;
@@ -97,6 +103,8 @@ readonly class MemoryQueue extends AbstractQueue implements PurgeableQueueInterf
                     'lock_time' => $this->now()
                 ]
             );
+
+            $this->getRateLimiter()->pop();
 
             return $this->createJob(['id' => $id, ...$value]);
         }

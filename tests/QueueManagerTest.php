@@ -19,6 +19,8 @@ use Berlioz\QueueManager\Job\JobInterface;
 use Berlioz\QueueManager\Queue\PurgeableQueueInterface;
 use Berlioz\QueueManager\Queue\QueueInterface;
 use Berlioz\QueueManager\QueueManager;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use PHPUnit\Framework\TestCase;
 
 class QueueManagerTest extends TestCase
@@ -113,6 +115,11 @@ class QueueManagerTest extends TestCase
         $this->secondaryQueueMock->method('size')->willReturn(10);
 
         $this->assertSame(15, $this->queueManager->size());
+    }
+
+    public function testGetRateLimiter(): void
+    {
+        $this->assertInstanceOf(NullRateLimiter::class, $this->queueManager->getRateLimiter());
     }
 
     public function testConsumeReturnsJobFromFirstQueue(): void

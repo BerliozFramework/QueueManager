@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Berlioz\QueueManager\Queue;
 
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -23,6 +25,7 @@ abstract readonly class AbstractQueue implements QueueInterface, ClockInterface
 {
     public function __construct(
         protected string $name = 'default',
+        protected RateLimiterInterface $limiter = new NullRateLimiter(),
     ) {
     }
 
@@ -40,6 +43,14 @@ abstract readonly class AbstractQueue implements QueueInterface, ClockInterface
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRateLimiter(): RateLimiterInterface
+    {
+        return $this->limiter;
     }
 
     /**

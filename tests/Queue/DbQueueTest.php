@@ -14,17 +14,23 @@ namespace Berlioz\QueueManager\Tests\Queue;
 
 use Berlioz\QueueManager\Queue\DbQueue;
 use Berlioz\QueueManager\Queue\QueueInterface;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use Hector\Connection\Connection;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
 #[RequiresPhpExtension('pdo_sqlite')]
 class DbQueueTest extends QueueTestCase
 {
-    public static function newQueue(): QueueInterface
+    public static function newQueue(RateLimiterInterface $limiter = new NullRateLimiter()): QueueInterface
     {
         $connection = new Connection('sqlite::memory:');
         $connection->execute(file_get_contents(__DIR__ . '/schema-jobs-sqlite.sql'));
 
-        return new DbQueue(connection: $connection, name: 'default');
+        return new DbQueue(
+            connection: $connection,
+            name: 'default',
+            limiter: $limiter,
+        );
     }
 }

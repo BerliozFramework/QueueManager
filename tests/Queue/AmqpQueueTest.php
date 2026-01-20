@@ -13,10 +13,12 @@
 namespace Berlioz\QueueManager\Tests\Queue;
 
 use AMQPConnection;
+use AMQPConnectionException;
 use Berlioz\QueueManager\Job\JobDescriptor;
 use Berlioz\QueueManager\Queue\AmqpQueue;
+use Berlioz\QueueManager\RateLimiter\NullRateLimiter;
+use Berlioz\QueueManager\RateLimiter\RateLimiterInterface;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use AMQPConnectionException;
 
 #[RequiresPhpExtension('amqp')]
 class AmqpQueueTest extends QueueTestCase
@@ -49,9 +51,12 @@ class AmqpQueueTest extends QueueTestCase
         static::newQueue()->purge();
     }
 
-    public static function newQueue(): AmqpQueue
+    public static function newQueue(RateLimiterInterface $limiter = new NullRateLimiter()): AmqpQueue
     {
-        return new AmqpQueue(connection: self::$amqpConnection);
+        return new AmqpQueue(
+            connection: self::$amqpConnection,
+            limiter: $limiter,
+        );
     }
 
     public function testMaxAttempts(): void
