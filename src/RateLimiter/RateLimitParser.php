@@ -45,6 +45,7 @@ readonly class RateLimitParser
             'seconds' => [$limit, 1 * $multiplier],
             'm',
             'min',
+            'mins',
             'minute',
             'minutes' => [$limit, 60 * $multiplier],
             'h',
