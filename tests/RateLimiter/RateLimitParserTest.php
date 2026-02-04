@@ -75,8 +75,8 @@ class RateLimitParserTest extends TestCase
     public function testParseInvalidUnit(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid time rate limit unit "mins"');
+        $this->expectExceptionMessage('Invalid time rate limit unit "mns"');
 
-        RateLimitParser::parse('10/mins');
+        RateLimitParser::parse('10/mns');
     }
 }
